@@ -35,7 +35,9 @@ def convert_r2rml_to_rml(mapping_file: str, output_path: str, driver: str,
 
         table_name_literal = g.value(logical_table_iri,
                                      R2RML.tableName)
-        if table_name_literal is None:
+        sql_query_literal = g.value(logical_table_iri,
+                                    R2RML.sql_query_literal)
+        if table_name_literal is None and sql_query_literal is None:
             break
 
         g.add((d2rq_rdb_iri, D2RQ.jdbcDSN, Literal(dsn)))
@@ -44,15 +46,23 @@ def convert_r2rml_to_rml(mapping_file: str, output_path: str, driver: str,
         g.add((d2rq_rdb_iri, D2RQ.password, Literal(rdb_password)))
         g.add((d2rq_rdb_iri, RDF.type, D2RQ.Database))
         g.add((logical_source_iri, R2RML.sqlVersion, R2RML.SQL2008))
-        g.add((logical_source_iri, R2RML.tableName,
-               table_name_literal))
+        if table_name_literal is not None:
+            g.add((logical_source_iri, R2RML.tableName,
+                   table_name_literal))
+        if sql_query_literal is not None:
+            g.add((logical_source_iri, R2RML.sqlQuery,
+                   sql_query_literal))
         g.add((logical_source_iri, RML.source, d2rq_rdb_iri))
         g.add((logical_source_iri, RDF.type, RML.LogicalSource))
         g.add((triples_map_iri, RML.logicalSource, logical_source_iri))
         g.remove((triples_map_iri, R2RML.logicalTable,
                   logical_table_iri))
-        g.remove((logical_table_iri, R2RML.tableName,
-                  table_name_literal))
+        if table_name_literal is not None:
+            g.remove((logical_table_iri, R2RML.tableName,
+                      table_name_literal))
+        if sql_query_literal is not None:
+            g.remove((logical_table_iri, R2RML.sqlQuery,
+                      sql_query_literal))
         g.remove((logical_table_iri, RDF.type, R2RML.LogicalTable))
         g.remove((logical_table_iri, R2RML.sqlVersion, R2RML.SQL2008))
 
